@@ -5,9 +5,8 @@ export function getElements() {
     "dayTxt","progressTxt","budgetTxt","trustTxt","apTxt","weatherTxt","comboTxt",
     "dayBar","progressBar","budgetBar","trustBar","apBar","turnChip",
     "eventMeta","eventTitle","eventBody","sceneOpt1","sceneOpt2","sceneOpt3",
-    "sceneActClash","sceneActIce","sceneActAi","sceneActNext",
-    "clashVal","bcfVal","chaosVal","aiVal","startBtn","nextDayBtn",
-    "clashBtn","iceBtn","aiBtn","roleNote","rosterBox","logBox",
+    "sceneActSetup","sceneActClash","sceneActIce","sceneActAi","sceneActNext",
+    "clashVal","bcfVal","chaosVal","aiVal","roleNote","rosterBox","logBox",
     "overlay","overlayStart","sceneOverlay","sceneChoices","sceneWrap","pixelScene"
   ];
   return Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));

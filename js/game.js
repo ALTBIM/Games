@@ -55,7 +55,7 @@ function playFx(kind) {
 
 function markSelected(btn) {
   if (!btn) return;
-  const all = [el.sceneOpt1, el.sceneOpt2, el.sceneOpt3, el.sceneActClash, el.sceneActIce, el.sceneActAi, el.sceneActNext];
+  const all = [el.sceneOpt1, el.sceneOpt2, el.sceneOpt3, el.sceneActSetup, el.sceneActClash, el.sceneActIce, el.sceneActAi, el.sceneActNext];
   all.forEach(b => b && b.classList.remove("selected"));
   btn.classList.add("selected");
   if (selectedTimer) clearTimeout(selectedTimer);
@@ -137,10 +137,7 @@ function render() {
     : `<div class="prow"><span>Ingen spillere aktive</span><span>-</span></div>`;
 
   const ready = state.running && !state.ended && !state.meeting.active;
-  el.nextDayBtn.disabled = !ready;
-  el.clashBtn.disabled = !ready;
-  el.iceBtn.disabled = !ready;
-  el.aiBtn.disabled = !ready;
+  el.sceneActSetup.disabled = false;
   el.sceneActNext.disabled = !ready;
   el.sceneActClash.disabled = !ready || state.ap < 1;
   el.sceneActIce.disabled = !ready || state.ap < 2;
@@ -591,13 +588,10 @@ function animateScene() {
   requestAnimationFrame(animateScene);
 }
 
-el.startBtn.addEventListener("click", () => {
+el.sceneActSetup.addEventListener("click", () => {
   if (!state.running || state.ended) showSetup();
+  else addLog(state, "Setup kan endres mellom runder/etter spillslutt.", "warn");
 });
-el.nextDayBtn.addEventListener("click", closeDay);
-el.clashBtn.addEventListener("click", doClashDetection);
-el.iceBtn.addEventListener("click", doIceMeeting);
-el.aiBtn.addEventListener("click", doAI);
 el.sceneActNext.addEventListener("click", closeDay);
 el.sceneActClash.addEventListener("click", doClashDetection);
 el.sceneActIce.addEventListener("click", doIceMeeting);

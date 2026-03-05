@@ -30,6 +30,7 @@
           <canvas id="pixelScene" class="pixel-scene" width="960" height="520" aria-label="2D byggeplass"></canvas>
           <div id="sceneOverlay" class="scene-overlay"></div>
           <div id="sceneActions" class="scene-actions">
+            <button id="sceneActSetup" class="scene-action alt">Start/Setup</button>
             <button id="sceneActClash" class="scene-action" disabled>Scan Clash</button>
             <button id="sceneActIce" class="scene-action" disabled>Kall Inn Mote</button>
             <button id="sceneActAi" class="scene-action" disabled>BOB AI</button>
@@ -48,28 +49,18 @@
         </div>
       </section>
 
-      <section class="panel ctl">
-        <h2>Kontroll-snarveier</h2>
-        <div class="globals">
-          <button id="startBtn">Start prosjekt</button>
-          <button id="nextDayBtn" class="alt" disabled>Neste dag (reset AP)</button>
-          <button id="clashBtn" class="ghost" disabled>Kjoer clash detection (1 AP)</button>
-          <button id="iceBtn" class="ghost" disabled>Kall inn ICE-mote (2 AP)</button>
-          <button id="aiBtn" class="ghost" disabled>Bruk BOB AI (2 AP)</button>
-        </div>
-        <div class="kpi">
-          <div class="k"><small>Clashes</small><strong id="clashVal">0</strong></div>
-          <div class="k"><small>BCF</small><strong id="bcfVal">0</strong></div>
-          <div class="k"><small>Kaos</small><strong id="chaosVal">0</strong></div>
-          <div class="k"><small>BOB kost</small><strong id="aiVal">0</strong></div>
-        </div>
-        <div class="note" id="roleNote">Hotseat ikke startet.</div>
-        <div class="roster" id="rosterBox"></div>
-      </section>
     </section>
 
     <section class="panel logs">
       <h2>Prosjektlogg</h2>
+      <div class="kpi">
+        <div class="k"><small>Clashes</small><strong id="clashVal">0</strong></div>
+        <div class="k"><small>BCF</small><strong id="bcfVal">0</strong></div>
+        <div class="k"><small>Kaos</small><strong id="chaosVal">0</strong></div>
+        <div class="k"><small>BOB kost</small><strong id="aiVal">0</strong></div>
+      </div>
+      <div class="note" id="roleNote">Hotseat ikke startet.</div>
+      <div class="roster" id="rosterBox"></div>
       <div class="logbox" id="logBox"></div>
     </section>
   </main>

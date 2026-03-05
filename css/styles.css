@@ -7,7 +7,7 @@ body{margin:0;font-family:"Segoe UI Variable Text","Segoe UI",sans-serif;color:v
 .bars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid #3c608d;background:#0a1a2d;border-radius:10px;padding:8px}.head{display:flex;justify-content:space-between;font-size:.86rem;margin-bottom:6px;color:#cbe2fb}.mini{margin-top:6px;font-size:.8rem;color:#cbe2fb}
 .meter{height:10px;border:1px solid #355275;border-radius:999px;background:#142844;overflow:hidden}.meter>span{display:block;height:100%;width:0;transition:width .35s ease;background:linear-gradient(90deg,#58c8ff,#7891ff)}
 .g>span{background:linear-gradient(90deg,#2ce39a,#5df4bc)} .y>span{background:linear-gradient(90deg,#ffd26e,#ffad4a)} .a>span{background:linear-gradient(90deg,#8af,#58c8ff)}
-.main{display:grid;grid-template-columns:2fr .9fr;gap:10px}.world,.ctl,.logs{padding:10px}.world h2,.ctl h2,.logs h2{margin:0 0 8px}
+.main{display:grid;grid-template-columns:1fr;gap:10px}.world,.logs{padding:10px}.world h2,.logs h2{margin:0 0 8px}
 .scene-wrap{position:relative;border:1px solid #355275;border-radius:14px;overflow:hidden;background:#071427}.pixel-scene{width:100%;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 .scene-wrap.alarm{animation:sceneAlarm .6s ease}
 .scene-wrap.alarm::after{content:"";position:absolute;inset:0;border:2px solid #ff8ea1;border-radius:14px;pointer-events:none;animation:alarmFrame .6s ease}
@@ -21,6 +21,7 @@ body{margin:0;font-family:"Segoe UI Variable Text","Segoe UI",sans-serif;color:v
 #sceneActIce{left:44%;top:64%}
 #sceneActAi{right:14%;top:24%}
 #sceneActNext{right:6%;bottom:14%}
+#sceneActSetup{left:6%;bottom:14%}
 .choice{text-align:left;border:0;border-radius:10px;padding:10px 11px;font-weight:700;cursor:pointer;color:#08233b;background:linear-gradient(180deg,#9be8ff,#58b8ff)}.choice.alt{background:linear-gradient(180deg,#eef6ff,#a2bddf)}.choice.ghost{background:#0b1c2f;color:#d5e8ff;border:1px solid #3b5b81}.choice:disabled{opacity:.5;cursor:not-allowed}
 .choice.selected{outline:2px solid #ffef9a;box-shadow:0 0 0 2px #ffef9a66}
 .choice:disabled,.scene-action:disabled{opacity:.34;filter:grayscale(1) saturate(.35);cursor:not-allowed;text-decoration:line-through}
@@ -36,4 +37,4 @@ body{margin:0;font-family:"Segoe UI Variable Text","Segoe UI",sans-serif;color:v
 .ov{position:fixed;inset:0;background:#030915d8;display:grid;place-items:center;padding:14px;z-index:20}.cardov{width:min(760px,100%);background:linear-gradient(160deg,#10243d,#0a1829);border:1px solid #466f9c;border-radius:14px;padding:12px}
 .setup{display:grid;gap:8px;margin-top:8px}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.setup input,.row input,.row select{background:#09182b;border:1px solid #3b6088;border-radius:8px;color:#d6e9ff;padding:8px;font-weight:700;width:100%}
 .achs{display:grid;gap:6px;margin:8px 0}.ach{border:1px solid #3b6088;border-radius:8px;padding:7px;background:#0a1a2e}
-@media(max-width:1180px){.top,.main{grid-template-columns:1fr}.bars{grid-template-columns:1fr 1fr}.scene-choices{grid-template-columns:1fr}}
+@media(max-width:1180px){.top{grid-template-columns:1fr}.bars{grid-template-columns:1fr 1fr}.scene-choices{grid-template-columns:1fr}}
