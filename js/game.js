@@ -10,7 +10,7 @@ import {
   addLog,
   syncClashSpots
 } from "./state.js";
-import { getElements, buildModules, renderLogs, renderClashSpots, renderPixelScene } from "./ui.js";
+import { getElements, renderLogs, renderClashSpots, renderPixelScene } from "./ui.js";
 
 const state = createState();
 const el = getElements();
@@ -22,9 +22,7 @@ function ensureAudio() {
     if (!Ctx) return null;
     audioCtx = new Ctx();
   }
-  if (audioCtx.state === "suspended") {
-    audioCtx.resume().catch(() => {});
-  }
+  if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
   return audioCtx;
 }
 
@@ -47,19 +45,11 @@ function playTone(freq, duration = 0.08, type = "sine", gain = 0.04, slide = 0) 
 }
 
 function playFx(kind) {
-  if (kind === "ok") {
-    playTone(520, 0.08, "triangle", 0.045, 120);
-  } else if (kind === "warn") {
-    playTone(220, 0.11, "sawtooth", 0.035, -40);
-  } else if (kind === "alarm") {
-    playTone(720, 0.06, "square", 0.03, -140);
-    setTimeout(() => playTone(680, 0.06, "square", 0.03, -120), 70);
-  } else if (kind === "combo") {
-    playTone(640, 0.06, "triangle", 0.045, 180);
-    setTimeout(() => playTone(760, 0.06, "triangle", 0.045, 120), 70);
-  } else {
-    playTone(420, 0.05, "sine", 0.03, 30);
-  }
+  if (kind === "ok") playTone(520, 0.08, "triangle", 0.045, 120);
+  else if (kind === "warn") playTone(220, 0.11, "sawtooth", 0.035, -40);
+  else if (kind === "alarm") { playTone(720, 0.06, "square", 0.03, -140); setTimeout(() => playTone(680, 0.06, "square", 0.03, -120), 70); }
+  else if (kind === "combo") { playTone(640, 0.06, "triangle", 0.045, 180); setTimeout(() => playTone(760, 0.06, "triangle", 0.045, 120), 70); }
+  else playTone(420, 0.05, "sine", 0.03, 30);
 }
 
 function spendAp(cost) {
@@ -74,23 +64,30 @@ function spendAp(cost) {
 }
 
 function triggerEventAlarm() {
-  el.stage.classList.remove("alarm");
-  void el.stage.offsetWidth;
-  el.stage.classList.add("alarm");
-  setTimeout(() => el.stage.classList.remove("alarm"), 700);
+  el.sceneWrap?.classList?.remove("alarm");
   playFx("alarm");
 }
 
-function renderTwin() {
-  const mods = [...el.building.querySelectorAll(".mod")];
-  const done = Math.round((state.progress / 100) * mods.length);
-  mods.forEach((m, i) => m.classList.toggle("done", i < done));
+function renderEventChoices() {
+  const ready = state.running && !state.ended && !state.meeting.active;
+  const hasEvent = !!state.currentEvent && ready;
+  el.sceneChoices.style.display = hasEvent ? "grid" : "none";
 
-  renderClashSpots(el, state.clashSpots, resolveClashSpot);
+  if (!hasEvent) {
+    el.sceneOpt1.disabled = true;
+    el.sceneOpt2.disabled = true;
+    el.sceneOpt3.disabled = true;
+    return;
+  }
 
-  el.drone.style.left = `${Math.min(90, 8 + (state.day / MAX_DAY) * 84)}%`;
-  el.drone.style.top = `${Math.min(84, 12 + (state.chaos / 60) * 70)}%`;
-  el.drone.textContent = state.aiCost > 40 ? "BOB+" : "BOB";
+  const e = state.currentEvent;
+  el.sceneOpt1.textContent = `${e.options[0].label} (1 AP)`;
+  el.sceneOpt2.textContent = `${e.options[1].label} (1 AP)`;
+  el.sceneOpt3.textContent = `${e.options[2].label} (1 AP)`;
+
+  el.sceneOpt1.disabled = state.ap < 1;
+  el.sceneOpt2.disabled = state.ap < 1;
+  el.sceneOpt3.disabled = state.ap < 1;
 }
 
 function render() {
@@ -110,26 +107,14 @@ function render() {
   el.budgetBar.style.width = `${Math.min(100, Math.max(0, (state.budget / 120) * 100))}%`;
   el.trustBar.style.width = `${Math.min(100, Math.max(0, state.trust))}%`;
   el.apBar.style.width = `${(state.ap / state.maxAp) * 100}%`;
-  el.comboBar.style.width = `${Math.min(100, state.combo * 14)}%`;
 
   const p = activePlayer(state);
   el.turnChip.textContent = `Tur: ${p ? `${p.name} (${roleName(p.role)})` : "-"}`;
+
   el.clashVal.textContent = `${state.clashes}`;
   el.bcfVal.textContent = `${state.bcf}`;
   el.chaosVal.textContent = `${state.chaos}`;
   el.aiVal.textContent = `${state.aiCost}`;
-  el.stage.classList.toggle("combo", state.combo >= 3);
-
-  const ready = state.running && !state.ended;
-  el.nextDayBtn.disabled = !ready;
-  el.clashBtn.disabled = !ready;
-  el.iceBtn.disabled = !ready;
-  el.aiBtn.disabled = !ready;
-
-  const hasEvent = !!state.currentEvent && ready;
-  el.opt1.disabled = !hasEvent || state.ap < 1;
-  el.opt2.disabled = !hasEvent || state.ap < 1;
-  el.opt3.disabled = !hasEvent || state.ap < 1;
 
   const role = currentRole(state);
   el.roleNote.textContent = role ? `${p.name} spiller ${role.name}. Bonus: ${role.note}` : "Hotseat ikke startet.";
@@ -137,15 +122,19 @@ function render() {
     ? state.players.map((pl, i) => `<div class="prow ${i === state.currentPlayerIdx ? "a" : ""}"><span>${pl.name} (${roleName(pl.role)})</span><span>${pl.points} p</span></div>`).join("")
     : `<div class="prow"><span>Ingen spillere aktive</span><span>-</span></div>`;
 
-  renderTwin();
+  const ready = state.running && !state.ended && !state.meeting.active;
+  el.nextDayBtn.disabled = !ready;
+  el.clashBtn.disabled = !ready;
+  el.iceBtn.disabled = !ready;
+  el.aiBtn.disabled = !ready;
+
+  renderEventChoices();
+
+  if (ready) renderClashSpots(el, state.clashSpots, resolveClashSpot);
+  else renderClashSpots(el, [], resolveClashSpot);
+
   renderPixelScene(el, state);
   renderLogs(el, state.logs);
-}
-
-function animateScene() {
-  state.frame += 1;
-  renderPixelScene(el, state);
-  requestAnimationFrame(animateScene);
 }
 
 function pickEvent() {
@@ -158,9 +147,6 @@ function presentEvent() {
   el.eventMeta.textContent = `Fag: ${e.team}`;
   el.eventTitle.textContent = e.title;
   el.eventBody.textContent = e.body;
-  el.opt1.textContent = `${e.options[0].label} (1 AP)`;
-  el.opt2.textContent = `${e.options[1].label} (1 AP)`;
-  el.opt3.textContent = `${e.options[2].label} (1 AP)`;
   triggerEventAlarm();
   render();
 }
@@ -260,7 +246,7 @@ function checkEnd() {
 }
 
 function resolveClashSpot(spotId) {
-  if (!state.running || state.ended) return;
+  if (!state.running || state.ended || state.meeting.active) return;
   if (!spendAp(1)) return;
 
   const idx = state.clashSpots.findIndex(s => s.id === spotId);
@@ -271,14 +257,12 @@ function resolveClashSpot(spotId) {
   state.clashes = Math.max(0, state.clashes - 1);
   state.bcf += 1;
   if (spot.severity >= 2 && Math.random() < 0.45) state.trust += 1;
+
   const now = performance.now();
-  if (now - state.lastClashFixMs <= 1600) {
-    state.combo += 1;
-  } else {
-    state.combo = 1;
-  }
+  state.combo = now - state.lastClashFixMs <= 1600 ? state.combo + 1 : 1;
   state.lastClashFixMs = now;
   state.comboBest = Math.max(state.comboBest, state.combo);
+
   if (state.combo >= 3) {
     state.progress += 1;
     if (state.combo % 2 === 0) state.trust += 1;
@@ -294,22 +278,60 @@ function resolveClashSpot(spotId) {
   render();
 }
 
+function rollWeather() {
+  const r = Math.random();
+  if (r < 0.32) return "SUN";
+  if (r < 0.57) return "CLOUD";
+  if (r < 0.78) return "RAIN";
+  if (r < 0.9) return "WIND";
+  return "SNOW";
+}
+
+function applyWeather() {
+  state.weather = rollWeather();
+  if (state.weather === "SUN") {
+    state.progress += 1;
+    state.maxAp = 4;
+    addLog(state, "Vaer: Sol. Teamet jobber raskere (+1 fremdrift, AP 4).", "good");
+  } else if (state.weather === "CLOUD") {
+    state.maxAp = 3;
+    addLog(state, "Vaer: Overskyet. Normal produksjon.", "");
+  } else if (state.weather === "RAIN") {
+    state.progress -= 1;
+    state.budget -= 1;
+    state.maxAp = 3;
+    addLog(state, "Vaer: Regn. Tempo ned og ekstra kost.", "warn");
+  } else if (state.weather === "WIND") {
+    state.clashes += 1;
+    state.maxAp = 3;
+    addLog(state, "Vaer: Vind. Montasje ga nytt avvik (+1 clash).", "warn");
+  } else {
+    state.progress -= 2;
+    state.chaos += 1;
+    state.maxAp = 2;
+    addLog(state, "Vaer: Sno. Produksjon stopper opp (AP 2).", "bad");
+  }
+}
+
 function closeDay() {
   applyWeather();
   resolveDelayed();
   dailyChaos();
   state.progress += Math.max(1, 4 - Math.floor(state.clashes / 9));
   state.budget -= Math.max(1, Math.floor(state.chaos / 10));
+
   const r = currentRole(state);
   if (r && r.id === "ENT") {
     state.progress += 1;
     if (state.clashes > 20) state.chaos += 1;
   }
+
   state.day += 1;
   state.ap = state.maxAp;
   state.combo = 0;
   state.lastClashFixMs = 0;
   state.currentEvent = null;
+
   checkAchievements();
   checkEnd();
   if (!state.ended) presentEvent();
@@ -317,7 +339,7 @@ function closeDay() {
 }
 
 function chooseOption(i) {
-  if (!state.currentEvent || state.ended) return;
+  if (!state.currentEvent || state.ended || state.meeting.active) return;
   if (!spendAp(1)) return;
 
   const before = state.clashes;
@@ -339,7 +361,7 @@ function chooseOption(i) {
 }
 
 function doClashDetection() {
-  if (state.ended) return;
+  if (state.ended || state.meeting.active) return;
   if (!spendAp(1)) return;
 
   const found = 3 + Math.floor(Math.random() * 8) + Math.floor(state.chaos / 12);
@@ -353,8 +375,46 @@ function doClashDetection() {
   render();
 }
 
+function startMeeting(outcome, fixed = 0) {
+  const participants = state.players.length
+    ? state.players.slice(0, 6).map(p => roleName(p.role))
+    : ["ARK", "RIB", "RIE", "ENT"];
+
+  let bubbles;
+  if (outcome === "bad") {
+    bubbles = [
+      "ARK: Dette er ikke min feil!",
+      "RIE: Modellen mangler data.",
+      "ENT: Jeg bygger ikke dette.",
+      "BIM: Vi mister tid!"
+    ];
+  } else if (outcome === "great") {
+    bubbles = [
+      "BIM: Endelig enighet!",
+      `RIB: Vi lukker ${fixed} clashes.`,
+      "RIV: Da kan vi bygge videre.",
+      "ENT: Kjoer pa!"
+    ];
+  } else {
+    bubbles = [
+      `BIM: Vi lukket ${fixed} clashes.`,
+      "ARK: Jeg justerer plan.",
+      "RIE: Oppdaterer foering.",
+      "ENT: Da holder vi tempo."
+    ];
+  }
+
+  state.meeting = {
+    active: true,
+    timer: 210,
+    total: 210,
+    participants,
+    bubbles
+  };
+}
+
 function doIceMeeting() {
-  if (state.ended) return;
+  if (state.ended || state.meeting.active) return;
   if (!spendAp(2)) return;
 
   state.budget -= 3;
@@ -363,6 +423,7 @@ function doIceMeeting() {
     state.trust -= 4;
     state.chaos += 4;
     addLog(state, "ICE-mote fail: feil folk, feil modell.", "bad");
+    startMeeting("bad", 0);
     playFx("warn");
   } else if (x < 0.75) {
     const fixed = 3 + Math.floor(Math.random() * 4);
@@ -372,6 +433,7 @@ function doIceMeeting() {
     const r = currentRole(state);
     if (r && r.id === "RIV") state.chaos = Math.max(0, state.chaos - 1);
     addLog(state, `ICE-mote ga enighet. Lukkede ${fixed} clashes.`, "good");
+    startMeeting("ok", fixed);
     playFx("ok");
   } else {
     const fixed = 7 + Math.floor(Math.random() * 4);
@@ -379,14 +441,16 @@ function doIceMeeting() {
     state.trust += 6;
     state.progress += 3;
     addLog(state, `Mirakelmote! ${fixed} clashes borte.`, "good");
+    startMeeting("great", fixed);
     playFx("combo");
   }
+
   checkEnd();
   render();
 }
 
 function doAI() {
-  if (state.ended) return;
+  if (state.ended || state.meeting.active) return;
   if (!spendAp(2)) return;
 
   let cost = 2 + Math.floor(state.aiCost / 5);
@@ -399,49 +463,11 @@ function doAI() {
   state.clashes = Math.max(0, state.clashes - fixed);
   state.bcf += 3;
   state.trust += 1;
+
   addLog(state, `BOB AI foreslo tiltak. ${fixed} clashes redusert. -${cost} MNOK.`, "good");
   playFx("ok");
   checkEnd();
   render();
-}
-
-function rollWeather() {
-  const r = Math.random();
-  if (r < 0.32) return "SUN";
-  if (r < 0.57) return "CLOUD";
-  if (r < 0.78) return "RAIN";
-  if (r < 0.9) return "WIND";
-  return "SNOW";
-}
-
-function applyWeather() {
-  state.weather = rollWeather();
-  if (state.weather === "SUN") {
-    state.progress += 1;
-    state.maxAp = 4;
-    addLog(state, "Vaer: Sol. Teamet jobber raskere (+1 fremdrift, AP 4).", "good");
-    playFx("ok");
-  } else if (state.weather === "CLOUD") {
-    state.maxAp = 3;
-    addLog(state, "Vaer: Overskyet. Normal produksjon.", "");
-  } else if (state.weather === "RAIN") {
-    state.progress -= 1;
-    state.budget -= 1;
-    state.maxAp = 3;
-    addLog(state, "Vaer: Regn. Tempo ned og ekstra kost.", "warn");
-    playFx("warn");
-  } else if (state.weather === "WIND") {
-    state.clashes += 1;
-    state.maxAp = 3;
-    addLog(state, "Vaer: Vind. Montasje ga nytt avvik (+1 clash).", "warn");
-    playFx("warn");
-  } else if (state.weather === "SNOW") {
-    state.progress -= 2;
-    state.chaos += 1;
-    state.maxAp = 2;
-    addLog(state, "Vaer: Sno. Produksjon stopper opp (AP 2).", "bad");
-    playFx("warn");
-  }
 }
 
 function resetGame(setup = null) {
@@ -502,6 +528,18 @@ function showSetup() {
   });
 }
 
+function animateScene() {
+  state.frame += 1;
+  if (state.meeting.active) {
+    state.meeting.timer -= 1;
+    if (state.meeting.timer <= 0) {
+      state.meeting.active = false;
+    }
+  }
+  renderPixelScene(el, state);
+  requestAnimationFrame(animateScene);
+}
+
 el.startBtn.addEventListener("click", () => {
   if (!state.running || state.ended) showSetup();
 });
@@ -509,13 +547,12 @@ el.nextDayBtn.addEventListener("click", closeDay);
 el.clashBtn.addEventListener("click", doClashDetection);
 el.iceBtn.addEventListener("click", doIceMeeting);
 el.aiBtn.addEventListener("click", doAI);
-el.opt1.addEventListener("click", () => chooseOption(0));
-el.opt2.addEventListener("click", () => chooseOption(1));
-el.opt3.addEventListener("click", () => chooseOption(2));
+el.sceneOpt1.addEventListener("click", () => chooseOption(0));
+el.sceneOpt2.addEventListener("click", () => chooseOption(1));
+el.sceneOpt3.addEventListener("click", () => chooseOption(2));
 el.overlayStart.addEventListener("click", showSetup);
 window.addEventListener("pointerdown", ensureAudio, { once: true });
 
-buildModules(el);
-addLog(state, "Trykk Start prosjekt og spill ved a klikke clashes + bruke action-kort.");
+addLog(state, "Trykk Start prosjekt. Valgene kommer inne i scenevinduet.");
 render();
 animateScene();

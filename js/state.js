@@ -29,7 +29,14 @@ export function createState() {
     clashSpots: [],
     nextClashId: 1,
     weather: "SUN",
-    frame: 0
+    frame: 0,
+    meeting: {
+      active: false,
+      timer: 0,
+      total: 0,
+      participants: [],
+      bubbles: []
+    }
   };
 }
 

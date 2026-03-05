@@ -11,7 +11,7 @@
     <section class="panel top">
       <article class="brand">
         <h1>BIM Crisis Control 2026</h1>
-        <p>Klikk clashes i modellen, spill action-kort, styr budsjett/fremdrift/tillit.</p>
+        <p>Naa er dette et spillvindu: byggescene i fokus, event-valg i scenen, og moete-animasjoner.</p>
         <span class="turn" id="turnChip">Tur: -</span>
       </article>
       <article class="bars">
@@ -20,38 +20,30 @@
         <div class="card"><div class="head"><span>Budsjett</span><strong id="budgetTxt">120 MNOK</strong></div><div class="meter y"><span id="budgetBar"></span></div></div>
         <div class="card"><div class="head"><span>Tillit</span><strong id="trustTxt">100</strong></div><div class="meter"><span id="trustBar"></span></div></div>
         <div class="card"><div class="head"><span>Vaer</span><strong id="weatherTxt">SUN</strong></div><div class="meter"><span style="width:100%"></span></div></div>
-        <div class="card"><div class="head"><span>Action Points</span><strong id="apTxt">3/3</strong></div><div class="meter a"><span id="apBar"></span></div></div>
-        <div class="card"><div class="head"><span>Combo</span><strong id="comboTxt">x0</strong></div><div class="meter"><span id="comboBar"></span></div></div>
+        <div class="card"><div class="head"><span>AP / Combo</span><strong id="apTxt">3/3</strong></div><div class="meter a"><span id="apBar"></span></div><div class="mini">Combo <strong id="comboTxt">x0</strong></div></div>
       </article>
     </section>
 
     <section class="main">
-      <section class="panel view">
-        <h2 style="margin:0 0 8px">16-bit Byggeplass</h2>
-        <canvas id="pixelScene" class="pixel-scene" width="640" height="220" aria-label="2D byggeplass"></canvas>
-        <h2 style="margin:10px 0 8px">Digital Twin View</h2>
-        <div class="stage" id="stage"><div class="building" id="building"></div><div class="drone" id="drone">BOB</div></div>
-        <p class="hint">Klikk blinkende clashes direkte i modellen for a lukke dem (koster 1 AP).</p>
-        <div class="kpi">
-          <div class="k"><small>Clashes</small><strong id="clashVal">0</strong></div>
-          <div class="k"><small>BCF</small><strong id="bcfVal">0</strong></div>
-          <div class="k"><small>Kaos</small><strong id="chaosVal">0</strong></div>
-          <div class="k"><small>BOB kost</small><strong id="aiVal">0</strong></div>
+      <section class="panel world">
+        <div class="scene-wrap" id="sceneWrap">
+          <canvas id="pixelScene" class="pixel-scene" width="960" height="520" aria-label="2D byggeplass"></canvas>
+          <div id="sceneOverlay" class="scene-overlay"></div>
+          <div id="sceneChoices" class="scene-choices">
+            <button id="sceneOpt1" class="choice" disabled>Valg 1</button>
+            <button id="sceneOpt2" class="choice alt" disabled>Valg 2</button>
+            <button id="sceneOpt3" class="choice ghost" disabled>Valg 3</button>
+          </div>
+        </div>
+        <div class="event-strip">
+          <span class="meta" id="eventMeta">Fag: ARK / RIB / RIV / RIE / ENT</span>
+          <h3 id="eventTitle">Prosjektet venter...</h3>
+          <p class="txt" id="eventBody">Trykk Start prosjekt.</p>
         </div>
       </section>
 
       <section class="panel ctl">
-        <h2 style="margin:0 0 8px">Event-kort</h2>
-        <article class="ev">
-          <div class="meta" id="eventMeta">Fag: ARK / RIB / RIV / RIE / ENT</div>
-          <h3 id="eventTitle">Prosjektet venter...</h3>
-          <p class="txt" id="eventBody">Trykk Start prosjekt.</p>
-          <div class="choices">
-            <button id="opt1" class="choice" disabled>Valg 1</button>
-            <button id="opt2" class="choice alt" disabled>Valg 2</button>
-            <button id="opt3" class="choice ghost" disabled>Valg 3</button>
-          </div>
-        </article>
+        <h2>Handlinger</h2>
         <div class="globals">
           <button id="startBtn">Start prosjekt</button>
           <button id="nextDayBtn" class="alt" disabled>Neste dag (reset AP)</button>
@@ -59,13 +51,19 @@
           <button id="iceBtn" class="ghost" disabled>Kall inn ICE-mote (2 AP)</button>
           <button id="aiBtn" class="ghost" disabled>Bruk BOB AI (2 AP)</button>
         </div>
+        <div class="kpi">
+          <div class="k"><small>Clashes</small><strong id="clashVal">0</strong></div>
+          <div class="k"><small>BCF</small><strong id="bcfVal">0</strong></div>
+          <div class="k"><small>Kaos</small><strong id="chaosVal">0</strong></div>
+          <div class="k"><small>BOB kost</small><strong id="aiVal">0</strong></div>
+        </div>
         <div class="note" id="roleNote">Hotseat ikke startet.</div>
         <div class="roster" id="rosterBox"></div>
       </section>
     </section>
 
     <section class="panel logs">
-      <h2 style="margin:0 0 8px">Prosjektlogg</h2>
+      <h2>Prosjektlogg</h2>
       <div class="logbox" id="logBox"></div>
     </section>
   </main>

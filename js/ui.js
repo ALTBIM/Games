@@ -2,23 +2,14 @@
 
 export function getElements() {
   const ids = [
-    "dayTxt","progressTxt","budgetTxt","trustTxt","apTxt","weatherTxt",
-    "comboTxt","dayBar","progressBar","budgetBar","trustBar","apBar","comboBar","turnChip",
-    "eventMeta","eventTitle","eventBody","opt1","opt2","opt3",
+    "dayTxt","progressTxt","budgetTxt","trustTxt","apTxt","weatherTxt","comboTxt",
+    "dayBar","progressBar","budgetBar","trustBar","apBar","turnChip",
+    "eventMeta","eventTitle","eventBody","sceneOpt1","sceneOpt2","sceneOpt3",
     "clashVal","bcfVal","chaosVal","aiVal","startBtn","nextDayBtn",
     "clashBtn","iceBtn","aiBtn","roleNote","rosterBox","logBox",
-    "overlay","overlayStart","building","stage","drone","pixelScene"
+    "overlay","overlayStart","sceneOverlay","sceneChoices","sceneWrap","pixelScene"
   ];
   return Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
-}
-
-export function buildModules(el) {
-  el.building.innerHTML = "";
-  for (let i = 0; i < 20; i += 1) {
-    const node = document.createElement("div");
-    node.className = "mod";
-    el.building.appendChild(node);
-  }
 }
 
 export function renderLogs(el, logs) {
@@ -26,7 +17,7 @@ export function renderLogs(el, logs) {
 }
 
 export function renderClashSpots(el, clashSpots, onClick) {
-  [...el.stage.querySelectorAll(".clash-hit")].forEach(n => n.remove());
+  [...el.sceneOverlay.querySelectorAll(".clash-hit")].forEach(n => n.remove());
   clashSpots.forEach(spot => {
     const b = document.createElement("button");
     b.className = "clash-hit";
@@ -35,7 +26,7 @@ export function renderClashSpots(el, clashSpots, onClick) {
     b.style.top = `${spot.y}%`;
     b.title = `Clash severity ${spot.severity}`;
     b.addEventListener("click", () => onClick(spot.id));
-    el.stage.appendChild(b);
+    el.sceneOverlay.appendChild(b);
   });
 }
 
@@ -45,26 +36,73 @@ function drawWeather(ctx, state, w, h) {
     ctx.fillRect(36, 24, 18, 18);
   } else if (state.weather === "RAIN") {
     ctx.fillStyle = "#9cc8ff";
-    for (let i = 0; i < 42; i += 1) {
-      const x = (i * 17 + state.frame * 3) % w;
-      const y = (i * 11 + state.frame * 6) % (h - 50);
-      ctx.fillRect(x, y, 1, 5);
+    for (let i = 0; i < 70; i += 1) {
+      const x = (i * 17 + state.frame * 4) % w;
+      const y = (i * 13 + state.frame * 8) % (h - 70);
+      ctx.fillRect(x, y, 1, 6);
     }
   } else if (state.weather === "SNOW") {
     ctx.fillStyle = "#e8f6ff";
-    for (let i = 0; i < 45; i += 1) {
-      const x = (i * 23 + state.frame * 1.6) % w;
-      const y = (i * 13 + state.frame * 2.1) % (h - 45);
+    for (let i = 0; i < 60; i += 1) {
+      const x = (i * 23 + state.frame * 1.9) % w;
+      const y = (i * 15 + state.frame * 2.2) % (h - 60);
       ctx.fillRect(x, y, 2, 2);
     }
   } else if (state.weather === "WIND") {
     ctx.fillStyle = "#cde3ff";
-    for (let i = 0; i < 14; i += 1) {
-      const y = 20 + i * 12;
-      const x = (state.frame * 6 + i * 27) % w;
-      ctx.fillRect(x, y, 16, 1);
+    for (let i = 0; i < 18; i += 1) {
+      const y = 25 + i * 16;
+      const x = (state.frame * 7 + i * 41) % w;
+      ctx.fillRect(x, y, 20, 1);
     }
   }
+}
+
+function drawSpeechBubble(ctx, x, y, text) {
+  const pad = 6;
+  ctx.font = "bold 10px monospace";
+  const tw = Math.min(180, ctx.measureText(text).width + pad * 2);
+  const th = 18;
+  ctx.fillStyle = "#f4fbff";
+  ctx.fillRect(x, y, tw, th);
+  ctx.fillStyle = "#0f2036";
+  ctx.fillRect(x + 5, y + th, 6, 4);
+  ctx.fillStyle = "#0f2036";
+  ctx.fillText(text.slice(0, 28), x + pad, y + 12);
+}
+
+function drawMeeting(ctx, state, w, h) {
+  const tableX = w / 2 - 110;
+  const tableY = h - 140;
+  ctx.fillStyle = "#a86d44";
+  ctx.fillRect(tableX, tableY, 220, 26);
+  ctx.fillStyle = "#7c4f31";
+  ctx.fillRect(tableX + 14, tableY + 26, 8, 24);
+  ctx.fillRect(tableX + 198, tableY + 26, 8, 24);
+
+  const people = state.meeting.participants;
+  const t = state.meeting.total > 0 ? 1 - (state.meeting.timer / state.meeting.total) : 1;
+  const ease = t * (2 - t);
+
+  people.forEach((p, i) => {
+    const target = [
+      { x: tableX - 28, y: tableY + 2 },
+      { x: tableX + 40, y: tableY - 14 },
+      { x: tableX + 130, y: tableY - 14 },
+      { x: tableX + 212, y: tableY + 2 },
+      { x: tableX + 70, y: tableY + 20 },
+      { x: tableX + 150, y: tableY + 20 }
+    ][i % 6];
+
+    const start = { x: (i % 2 ? w + 40 : -40), y: h - 64 - i * 3 };
+    const x = start.x + (target.x - start.x) * ease;
+    const y = start.y + (target.y - start.y) * ease;
+    drawSprite(ctx, SPRITES.worker, x, y, 2);
+
+    if (state.meeting.bubbles[i] && state.meeting.timer > state.meeting.total * 0.25) {
+      drawSpeechBubble(ctx, x - 6, y - 20, state.meeting.bubbles[i]);
+    }
+  });
 }
 
 export function renderPixelScene(el, state) {
@@ -79,31 +117,31 @@ export function renderPixelScene(el, state) {
   ctx.fillStyle = "#7ecbff";
   ctx.fillRect(0, 0, w, h);
   ctx.fillStyle = "#4f8fd1";
-  ctx.fillRect(0, 90, w, 40);
+  ctx.fillRect(0, 170, w, 76);
 
   drawWeather(ctx, state, w, h);
 
-  const skyline = [40, 62, 50, 68, 56, 74, 48, 60, 46, 70];
+  const skyline = [60, 82, 70, 88, 76, 94, 68, 80, 66, 90, 58, 86, 72, 92, 64];
   ctx.fillStyle = "#42668f";
-  skyline.forEach((v, i) => ctx.fillRect(i * 64, 130 - v, 42, v));
+  skyline.forEach((v, i) => ctx.fillRect(i * 70, 246 - v, 48, v));
 
   ctx.fillStyle = "#4a6a34";
-  ctx.fillRect(0, h - 42, w, 42);
+  ctx.fillRect(0, h - 70, w, 70);
   ctx.fillStyle = "#345027";
-  for (let i = 0; i < w; i += 20) ctx.fillRect(i, h - 22, 10, 8);
+  for (let i = 0; i < w; i += 24) ctx.fillRect(i, h - 30, 12, 10);
 
-  const floors = 10;
-  const builtFloors = Math.max(1, Math.min(floors, Math.floor((state.day / 6) + (state.progress / 20))));
-  const bx = 220;
-  const by = h - 42;
-  const bw = 210;
-  const fh = 14;
+  const floors = 12;
+  const builtFloors = Math.max(1, Math.min(floors, Math.floor((state.day / 5) + (state.progress / 18))));
+  const bx = 310;
+  const by = h - 70;
+  const bw = 320;
+  const fh = 18;
 
   ctx.fillStyle = "#d0c17d";
-  ctx.fillRect(bx - 26, by - (floors * fh) - 48, 8, floors * fh + 48);
-  ctx.fillRect(bx - 26, by - (floors * fh) - 48, 130, 8);
-  const hookX = bx + 16 + ((state.day * 7 + state.frame * 0.7) % 80);
-  ctx.fillRect(hookX, by - (floors * fh) - 40, 2, 26);
+  ctx.fillRect(bx - 34, by - (floors * fh) - 60, 10, floors * fh + 60);
+  ctx.fillRect(bx - 34, by - (floors * fh) - 60, 180, 10);
+  const hookX = bx + 20 + ((state.day * 10 + state.frame * 0.9) % 130);
+  ctx.fillRect(hookX, by - (floors * fh) - 50, 2, 36);
 
   ctx.fillStyle = "#5b6673";
   ctx.fillRect(bx, by - floors * fh, bw, floors * fh);
@@ -114,26 +152,29 @@ export function renderPixelScene(el, state) {
     ctx.fillRect(bx + 2, y + 1, bw - 4, fh - 2);
     if (f < builtFloors - 1) {
       ctx.fillStyle = "#2f4f74";
-      for (let x = bx + 12; x < bx + bw - 10; x += 24) ctx.fillRect(x, y + 4, 10, 6);
+      for (let x = bx + 16; x < bx + bw - 12; x += 28) ctx.fillRect(x, y + 5, 12, 7);
     }
   }
 
   ctx.fillStyle = "#c88a4d";
-  ctx.fillRect(bx + 4, by - builtFloors * fh + 4, bw - 8, 2);
+  ctx.fillRect(bx + 8, by - builtFloors * fh + 6, bw - 16, 3);
 
-  // Moving pixel sprites from sprite-sheet definitions
-  const truckX = 18 + ((state.frame * 1.8) % (w - 90));
-  const exX = w - 90 - ((state.frame * 1.2) % 140);
-  drawSprite(ctx, SPRITES.truck, truckX, h - 48, 2);
-  drawSprite(ctx, SPRITES.excavator, exX, h - 52, 2);
+  const truckX = 24 + ((state.frame * 2.1) % (w - 130));
+  const exX = w - 120 - ((state.frame * 1.35) % 180);
+  drawSprite(ctx, SPRITES.truck, truckX, h - 72, 3);
+  drawSprite(ctx, SPRITES.excavator, exX, h - 78, 3);
 
-  const workerX = bx + 20 + ((state.frame * 1.6 + state.day * 9 + state.chaos * 3) % (bw - 40));
-  const workerY = by - builtFloors * fh + 2;
-  drawSprite(ctx, SPRITES.worker, workerX, workerY, 2);
+  if (state.meeting.active) {
+    drawMeeting(ctx, state, w, h);
+  } else {
+    const workerX = bx + 26 + ((state.frame * 1.8 + state.day * 11 + state.chaos * 4) % (bw - 50));
+    const workerY = by - builtFloors * fh + 4;
+    drawSprite(ctx, SPRITES.worker, workerX, workerY, 3);
+  }
 
   ctx.fillStyle = "#0f2137";
-  ctx.fillRect(10, 8, 300, 22);
+  ctx.fillRect(12, 10, 390, 24);
   ctx.fillStyle = "#d8ecff";
   ctx.font = "bold 12px monospace";
-  ctx.fillText(`DAY ${state.day}  BUILD ${builtFloors}/${floors}  WEATHER ${state.weather}`, 16, 23);
+  ctx.fillText(`DAY ${state.day} BUILD ${builtFloors}/${floors} WEATHER ${state.weather}`, 18, 26);
 }
