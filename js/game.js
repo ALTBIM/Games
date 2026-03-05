@@ -62,6 +62,10 @@ function markSelected(btn) {
   selectedTimer = setTimeout(() => btn.classList.remove("selected"), 700);
 }
 
+function isHardLockedByMeeting() {
+  return state.meeting.active && state.meeting.mode === "meeting";
+}
+
 function spendAp(cost) {
   if (state.ap < cost) {
     addLog(state, `Ikke nok AP. Trenger ${cost}, har ${state.ap}.`, "warn");
@@ -82,7 +86,7 @@ function triggerEventAlarm() {
 }
 
 function renderEventChoices() {
-  const ready = state.running && !state.ended && !state.meeting.active;
+  const ready = state.running && !state.ended && !isHardLockedByMeeting();
   const hasEvent = !!state.currentEvent && ready;
   el.sceneChoices.style.display = hasEvent ? "grid" : "none";
 
@@ -136,7 +140,8 @@ function render() {
     ? state.players.map((pl, i) => `<div class="prow ${i === state.currentPlayerIdx ? "a" : ""}"><span>${pl.name} (${roleName(pl.role)})</span><span>${pl.points} p</span></div>`).join("")
     : `<div class="prow"><span>Ingen spillere aktive</span><span>-</span></div>`;
 
-  const ready = state.running && !state.ended && !state.meeting.active;
+  const hardLock = isHardLockedByMeeting();
+  const ready = state.running && !state.ended && !hardLock;
   el.sceneActSetup.disabled = false;
   el.sceneActNext.disabled = !ready;
   el.sceneActClash.disabled = !ready || state.ap < 1;
@@ -261,7 +266,7 @@ function checkEnd() {
 }
 
 function resolveClashSpot(spotId) {
-  if (!state.running || state.ended || state.meeting.active) return;
+  if (!state.running || state.ended || isHardLockedByMeeting()) return;
   if (!spendAp(1)) return;
 
   const idx = state.clashSpots.findIndex(s => s.id === spotId);
@@ -355,7 +360,7 @@ function closeDay() {
 }
 
 function chooseOption(i) {
-  if (!state.currentEvent || state.ended || state.meeting.active) return;
+  if (!state.currentEvent || state.ended || isHardLockedByMeeting()) return;
   if (!spendAp(1)) return;
   markSelected([el.sceneOpt1, el.sceneOpt2, el.sceneOpt3][i]);
 
@@ -382,7 +387,7 @@ function chooseOption(i) {
 }
 
 function doClashDetection() {
-  if (state.ended || state.meeting.active) return;
+  if (state.ended || isHardLockedByMeeting()) return;
   if (!spendAp(1)) return;
   markSelected(el.sceneActClash);
 
@@ -455,7 +460,7 @@ function startMoment(mode, bubbles) {
 }
 
 function doIceMeeting() {
-  if (state.ended || state.meeting.active) return;
+  if (state.ended || isHardLockedByMeeting()) return;
   if (!spendAp(2)) return;
   markSelected(el.sceneActIce);
 
@@ -492,7 +497,7 @@ function doIceMeeting() {
 }
 
 function doAI() {
-  if (state.ended || state.meeting.active) return;
+  if (state.ended || isHardLockedByMeeting()) return;
   if (!spendAp(2)) return;
   markSelected(el.sceneActAi);
 
@@ -536,20 +541,24 @@ function resetGame(setup = null) {
 
 function showSetup() {
   const opts = roleDefs.map(r => `<option value="${r.id}">${r.name}</option>`).join("");
-  el.overlay.innerHTML = `<div class="cardov"><h3>Velg spillere og roller</h3><p>Lokal multiplayer med turbytte.</p><div class="setup"><label>Antall spillere (1-6)<input id="setupCount" type="number" min="1" max="6" value="2"/></label><div id="setupPlayers"></div></div><button id="setupStartBtn">Start hotseat</button></div>`;
+  el.overlay.innerHTML = `<div class="cardov"><h3>Velg spillere og roller</h3><p>Lokal multiplayer med turbytte.</p><div class="setup"><label>Antall spillere (1-6)<input id="setupCount" type="number" min="1" max="6" value="2"/></label><div id="setupPlayers"></div><p id="setupError" style="min-height:18px;color:#ffb3c1;margin:0;"></p></div><button id="setupStartBtn">Start hotseat</button></div>`;
   el.overlay.style.display = "grid";
 
   const countInput = document.getElementById("setupCount");
   const playersWrap = document.getElementById("setupPlayers");
   const setupStartBtn = document.getElementById("setupStartBtn");
+  const setupError = document.getElementById("setupError");
 
   function draw() {
     const c = Math.max(1, Math.min(6, Number(countInput.value) || 1));
     let html = "";
     for (let i = 0; i < c; i += 1) {
-      html += `<div class="row"><input data-kind="name" type="text" value="Spiller ${i + 1}"/><select data-kind="role">${opts}</select></div>`;
+      const selectedRole = roleDefs[i % roleDefs.length].id;
+      const rowOpts = roleDefs.map(r => `<option value="${r.id}"${r.id === selectedRole ? " selected" : ""}>${r.name}</option>`).join("");
+      html += `<div class="row"><input data-kind="name" type="text" value="Spiller ${i + 1}"/><select data-kind="role">${rowOpts}</select></div>`;
     }
     playersWrap.innerHTML = html;
+    setupError.textContent = "";
   }
 
   countInput.addEventListener("input", draw);
@@ -565,7 +574,7 @@ function showSetup() {
       const name = (names[i].value || "").trim() || `Spiller ${i + 1}`;
       const role = roles[i].value;
       if (used.has(role)) {
-        alert("Hver spiller maa ha unik rolle.");
+        setupError.textContent = "Hver spiller maa ha unik rolle.";
         return;
       }
       used.add(role);
