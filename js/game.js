@@ -102,6 +102,7 @@ function render() {
   el.budgetTxt.textContent = `${state.budget} MNOK`;
   el.trustTxt.textContent = `${state.trust}`;
   el.apTxt.textContent = `${state.ap}/${state.maxAp}`;
+  el.weatherTxt.textContent = state.weather;
   el.comboTxt.textContent = `x${state.combo}`;
 
   el.dayBar.style.width = `${(state.day / MAX_DAY) * 100}%`;
@@ -139,6 +140,12 @@ function render() {
   renderTwin();
   renderPixelScene(el, state);
   renderLogs(el, state.logs);
+}
+
+function animateScene() {
+  state.frame += 1;
+  renderPixelScene(el, state);
+  requestAnimationFrame(animateScene);
 }
 
 function pickEvent() {
@@ -288,6 +295,7 @@ function resolveClashSpot(spotId) {
 }
 
 function closeDay() {
+  applyWeather();
   resolveDelayed();
   dailyChaos();
   state.progress += Math.max(1, 4 - Math.floor(state.clashes / 9));
@@ -397,6 +405,45 @@ function doAI() {
   render();
 }
 
+function rollWeather() {
+  const r = Math.random();
+  if (r < 0.32) return "SUN";
+  if (r < 0.57) return "CLOUD";
+  if (r < 0.78) return "RAIN";
+  if (r < 0.9) return "WIND";
+  return "SNOW";
+}
+
+function applyWeather() {
+  state.weather = rollWeather();
+  if (state.weather === "SUN") {
+    state.progress += 1;
+    state.maxAp = 4;
+    addLog(state, "Vaer: Sol. Teamet jobber raskere (+1 fremdrift, AP 4).", "good");
+    playFx("ok");
+  } else if (state.weather === "CLOUD") {
+    state.maxAp = 3;
+    addLog(state, "Vaer: Overskyet. Normal produksjon.", "");
+  } else if (state.weather === "RAIN") {
+    state.progress -= 1;
+    state.budget -= 1;
+    state.maxAp = 3;
+    addLog(state, "Vaer: Regn. Tempo ned og ekstra kost.", "warn");
+    playFx("warn");
+  } else if (state.weather === "WIND") {
+    state.clashes += 1;
+    state.maxAp = 3;
+    addLog(state, "Vaer: Vind. Montasje ga nytt avvik (+1 clash).", "warn");
+    playFx("warn");
+  } else if (state.weather === "SNOW") {
+    state.progress -= 2;
+    state.chaos += 1;
+    state.maxAp = 2;
+    addLog(state, "Vaer: Sno. Produksjon stopper opp (AP 2).", "bad");
+    playFx("warn");
+  }
+}
+
 function resetGame(setup = null) {
   let players = [];
   if (Array.isArray(setup) && setup.length) {
@@ -471,3 +518,4 @@ window.addEventListener("pointerdown", ensureAudio, { once: true });
 buildModules(el);
 addLog(state, "Trykk Start prosjekt og spill ved a klikke clashes + bruke action-kort.");
 render();
+animateScene();

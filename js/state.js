@@ -27,7 +27,9 @@ export function createState() {
     players: [],
     currentPlayerIdx: 0,
     clashSpots: [],
-    nextClashId: 1
+    nextClashId: 1,
+    weather: "SUN",
+    frame: 0
   };
 }
 
