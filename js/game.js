@@ -16,6 +16,7 @@ const state = createState();
 const el = getElements();
 let audioCtx = null;
 let selectedTimer = null;
+let lastFrameMs = 0;
 
 function ensureAudio() {
   if (!audioCtx) {
@@ -438,8 +439,8 @@ function startMeeting(outcome, fixed = 0) {
   state.meeting = {
     mode: "meeting",
     active: true,
-    timer: 210,
-    total: 210,
+    timer: 3200,
+    total: 3200,
     participants,
     bubbles
   };
@@ -452,8 +453,8 @@ function startMoment(mode, bubbles) {
   state.meeting = {
     mode,
     active: true,
-    timer: 150,
-    total: 150,
+    timer: 2200,
+    total: 2200,
     participants,
     bubbles
   };
@@ -585,12 +586,17 @@ function showSetup() {
   });
 }
 
-function animateScene() {
+function animateScene(ts) {
+  if (!lastFrameMs) lastFrameMs = ts;
+  const dt = Math.min(80, ts - lastFrameMs);
+  lastFrameMs = ts;
   state.frame += 1;
   if (state.meeting.active) {
-    state.meeting.timer -= 1;
+    state.meeting.timer -= dt;
     if (state.meeting.timer <= 0) {
       state.meeting.active = false;
+      state.meeting.timer = 0;
+      render();
     }
   }
   renderPixelScene(el, state);
