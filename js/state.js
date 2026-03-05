@@ -31,6 +31,7 @@ export function createState() {
     weather: "SUN",
     frame: 0,
     meeting: {
+      mode: "meeting",
       active: false,
       timer: 0,
       total: 0,

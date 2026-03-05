@@ -5,6 +5,7 @@ export function getElements() {
     "dayTxt","progressTxt","budgetTxt","trustTxt","apTxt","weatherTxt","comboTxt",
     "dayBar","progressBar","budgetBar","trustBar","apBar","turnChip",
     "eventMeta","eventTitle","eventBody","sceneOpt1","sceneOpt2","sceneOpt3",
+    "sceneActClash","sceneActIce","sceneActAi","sceneActNext",
     "clashVal","bcfVal","chaosVal","aiVal","startBtn","nextDayBtn",
     "clashBtn","iceBtn","aiBtn","roleNote","rosterBox","logBox",
     "overlay","overlayStart","sceneOverlay","sceneChoices","sceneWrap","pixelScene"
@@ -72,35 +73,47 @@ function drawSpeechBubble(ctx, x, y, text) {
 }
 
 function drawMeeting(ctx, state, w, h) {
+  const meetingMode = state.meeting.mode === "meeting";
   const tableX = w / 2 - 110;
   const tableY = h - 140;
-  ctx.fillStyle = "#a86d44";
-  ctx.fillRect(tableX, tableY, 220, 26);
-  ctx.fillStyle = "#7c4f31";
-  ctx.fillRect(tableX + 14, tableY + 26, 8, 24);
-  ctx.fillRect(tableX + 198, tableY + 26, 8, 24);
+  if (meetingMode) {
+    ctx.fillStyle = "#a86d44";
+    ctx.fillRect(tableX, tableY, 220, 26);
+    ctx.fillStyle = "#7c4f31";
+    ctx.fillRect(tableX + 14, tableY + 26, 8, 24);
+    ctx.fillRect(tableX + 198, tableY + 26, 8, 24);
+  }
 
   const people = state.meeting.participants;
   const t = state.meeting.total > 0 ? 1 - (state.meeting.timer / state.meeting.total) : 1;
   const ease = t * (2 - t);
 
   people.forEach((p, i) => {
-    const target = [
-      { x: tableX - 28, y: tableY + 2 },
-      { x: tableX + 40, y: tableY - 14 },
-      { x: tableX + 130, y: tableY - 14 },
-      { x: tableX + 212, y: tableY + 2 },
-      { x: tableX + 70, y: tableY + 20 },
-      { x: tableX + 150, y: tableY + 20 }
-    ][i % 6];
+    const target = meetingMode
+      ? [
+        { x: tableX - 28, y: tableY + 2 },
+        { x: tableX + 40, y: tableY - 14 },
+        { x: tableX + 130, y: tableY - 14 },
+        { x: tableX + 212, y: tableY + 2 },
+        { x: tableX + 70, y: tableY + 20 },
+        { x: tableX + 150, y: tableY + 20 }
+      ][i % 6]
+      : [
+        { x: w * 0.28, y: h - 120 },
+        { x: w * 0.4, y: h - 112 },
+        { x: w * 0.52, y: h - 118 },
+        { x: w * 0.64, y: h - 110 },
+        { x: w * 0.76, y: h - 116 },
+        { x: w * 0.18, y: h - 110 }
+      ][i % 6];
 
     const start = { x: (i % 2 ? w + 40 : -40), y: h - 64 - i * 3 };
     const x = start.x + (target.x - start.x) * ease;
     const y = start.y + (target.y - start.y) * ease;
     drawSprite(ctx, SPRITES.worker, x, y, 2);
 
-    if (state.meeting.bubbles[i] && state.meeting.timer > state.meeting.total * 0.25) {
-      drawSpeechBubble(ctx, x - 6, y - 20, state.meeting.bubbles[i]);
+    if (state.meeting.bubbles[i] && state.meeting.timer > state.meeting.total * 0.22) {
+      drawSpeechBubble(ctx, x - 8, y - 22, state.meeting.bubbles[i]);
     }
   });
 }

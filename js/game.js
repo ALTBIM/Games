@@ -15,6 +15,7 @@ import { getElements, renderLogs, renderClashSpots, renderPixelScene } from "./u
 const state = createState();
 const el = getElements();
 let audioCtx = null;
+let selectedTimer = null;
 
 function ensureAudio() {
   if (!audioCtx) {
@@ -52,6 +53,15 @@ function playFx(kind) {
   else playTone(420, 0.05, "sine", 0.03, 30);
 }
 
+function markSelected(btn) {
+  if (!btn) return;
+  const all = [el.sceneOpt1, el.sceneOpt2, el.sceneOpt3, el.sceneActClash, el.sceneActIce, el.sceneActAi, el.sceneActNext];
+  all.forEach(b => b && b.classList.remove("selected"));
+  btn.classList.add("selected");
+  if (selectedTimer) clearTimeout(selectedTimer);
+  selectedTimer = setTimeout(() => btn.classList.remove("selected"), 700);
+}
+
 function spendAp(cost) {
   if (state.ap < cost) {
     addLog(state, `Ikke nok AP. Trenger ${cost}, har ${state.ap}.`, "warn");
@@ -64,7 +74,10 @@ function spendAp(cost) {
 }
 
 function triggerEventAlarm() {
-  el.sceneWrap?.classList?.remove("alarm");
+  el.sceneWrap.classList.remove("alarm");
+  void el.sceneWrap.offsetWidth;
+  el.sceneWrap.classList.add("alarm");
+  setTimeout(() => el.sceneWrap.classList.remove("alarm"), 650);
   playFx("alarm");
 }
 
@@ -74,6 +87,7 @@ function renderEventChoices() {
   el.sceneChoices.style.display = hasEvent ? "grid" : "none";
 
   if (!hasEvent) {
+    [el.sceneOpt1, el.sceneOpt2, el.sceneOpt3].forEach(b => b.classList.remove("selected"));
     el.sceneOpt1.disabled = true;
     el.sceneOpt2.disabled = true;
     el.sceneOpt3.disabled = true;
@@ -127,6 +141,10 @@ function render() {
   el.clashBtn.disabled = !ready;
   el.iceBtn.disabled = !ready;
   el.aiBtn.disabled = !ready;
+  el.sceneActNext.disabled = !ready;
+  el.sceneActClash.disabled = !ready || state.ap < 1;
+  el.sceneActIce.disabled = !ready || state.ap < 2;
+  el.sceneActAi.disabled = !ready || state.ap < 2;
 
   renderEventChoices();
 
@@ -314,6 +332,7 @@ function applyWeather() {
 }
 
 function closeDay() {
+  markSelected(el.sceneActNext);
   applyWeather();
   resolveDelayed();
   dailyChaos();
@@ -341,6 +360,7 @@ function closeDay() {
 function chooseOption(i) {
   if (!state.currentEvent || state.ended || state.meeting.active) return;
   if (!spendAp(1)) return;
+  markSelected([el.sceneOpt1, el.sceneOpt2, el.sceneOpt3][i]);
 
   const before = state.clashes;
   const option = state.currentEvent.options[i];
@@ -354,6 +374,10 @@ function chooseOption(i) {
 
   addLog(state, `Event-kort: ${option.label} (${p ? p.name : "solo"})`, d > 2 ? "warn" : "good");
   playFx(d > 2 ? "warn" : "ok");
+  startMoment("onsite", [
+    `${p ? p.name : "BIM"}: ${option.label.slice(0, 22)}`,
+    d > 2 ? "RIB: Dette blir dyrt..." : "RIV: Vi fikser dette."
+  ]);
   state.currentEvent = null;
   nextTurn(state);
   checkEnd();
@@ -363,6 +387,7 @@ function chooseOption(i) {
 function doClashDetection() {
   if (state.ended || state.meeting.active) return;
   if (!spendAp(1)) return;
+  markSelected(el.sceneActClash);
 
   const found = 3 + Math.floor(Math.random() * 8) + Math.floor(state.chaos / 12);
   state.clashes += found;
@@ -372,6 +397,10 @@ function doClashDetection() {
   state.maxClashSpike = Math.max(state.maxClashSpike, found);
   addLog(state, `Clash detection fant ${found} nye konflikter.`, "warn");
   playFx("warn");
+  startMoment("onsite", [
+    `BIM: Fant ${found} clashes`,
+    "RIB: Prioriter kritiske soner."
+  ]);
   render();
 }
 
@@ -405,6 +434,7 @@ function startMeeting(outcome, fixed = 0) {
   }
 
   state.meeting = {
+    mode: "meeting",
     active: true,
     timer: 210,
     total: 210,
@@ -413,9 +443,24 @@ function startMeeting(outcome, fixed = 0) {
   };
 }
 
+function startMoment(mode, bubbles) {
+  const participants = state.players.length
+    ? state.players.slice(0, 4).map(p => roleName(p.role))
+    : ["BIM", "RIB", "RIE", "ENT"];
+  state.meeting = {
+    mode,
+    active: true,
+    timer: 150,
+    total: 150,
+    participants,
+    bubbles
+  };
+}
+
 function doIceMeeting() {
   if (state.ended || state.meeting.active) return;
   if (!spendAp(2)) return;
+  markSelected(el.sceneActIce);
 
   state.budget -= 3;
   const x = Math.random();
@@ -452,6 +497,7 @@ function doIceMeeting() {
 function doAI() {
   if (state.ended || state.meeting.active) return;
   if (!spendAp(2)) return;
+  markSelected(el.sceneActAi);
 
   let cost = 2 + Math.floor(state.aiCost / 5);
   const r = currentRole(state);
@@ -466,6 +512,11 @@ function doAI() {
 
   addLog(state, `BOB AI foreslo tiltak. ${fixed} clashes redusert. -${cost} MNOK.`, "good");
   playFx("ok");
+  startMoment("onsite", [
+    "BOB: Forslag sendt.",
+    `BIM: ${fixed} clashes kan lukkes.`,
+    "ENT: Dette liker vi."
+  ]);
   checkEnd();
   render();
 }
@@ -547,6 +598,10 @@ el.nextDayBtn.addEventListener("click", closeDay);
 el.clashBtn.addEventListener("click", doClashDetection);
 el.iceBtn.addEventListener("click", doIceMeeting);
 el.aiBtn.addEventListener("click", doAI);
+el.sceneActNext.addEventListener("click", closeDay);
+el.sceneActClash.addEventListener("click", doClashDetection);
+el.sceneActIce.addEventListener("click", doIceMeeting);
+el.sceneActAi.addEventListener("click", doAI);
 el.sceneOpt1.addEventListener("click", () => chooseOption(0));
 el.sceneOpt2.addEventListener("click", () => chooseOption(1));
 el.sceneOpt3.addEventListener("click", () => chooseOption(2));

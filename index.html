@@ -29,6 +29,12 @@
         <div class="scene-wrap" id="sceneWrap">
           <canvas id="pixelScene" class="pixel-scene" width="960" height="520" aria-label="2D byggeplass"></canvas>
           <div id="sceneOverlay" class="scene-overlay"></div>
+          <div id="sceneActions" class="scene-actions">
+            <button id="sceneActClash" class="scene-action" disabled>Scan Clash</button>
+            <button id="sceneActIce" class="scene-action" disabled>Kall Inn Mote</button>
+            <button id="sceneActAi" class="scene-action" disabled>BOB AI</button>
+            <button id="sceneActNext" class="scene-action alt" disabled>Neste Dag</button>
+          </div>
           <div id="sceneChoices" class="scene-choices">
             <button id="sceneOpt1" class="choice" disabled>Valg 1</button>
             <button id="sceneOpt2" class="choice alt" disabled>Valg 2</button>
@@ -43,7 +49,7 @@
       </section>
 
       <section class="panel ctl">
-        <h2>Handlinger</h2>
+        <h2>Kontroll-snarveier</h2>
         <div class="globals">
           <button id="startBtn">Start prosjekt</button>
           <button id="nextDayBtn" class="alt" disabled>Neste dag (reset AP)</button>
