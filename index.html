@@ -1,0 +1,80 @@
+﻿<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BIM Crisis 2026</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <main class="app">
+    <section class="panel top">
+      <article class="brand">
+        <h1>BIM Crisis Control 2026</h1>
+        <p>Klikk clashes i modellen, spill action-kort, styr budsjett/fremdrift/tillit.</p>
+        <span class="turn" id="turnChip">Tur: -</span>
+      </article>
+      <article class="bars">
+        <div class="card"><div class="head"><span>Dag</span><strong id="dayTxt">1/60</strong></div><div class="meter"><span id="dayBar"></span></div></div>
+        <div class="card"><div class="head"><span>Fremdrift</span><strong id="progressTxt">0%</strong></div><div class="meter g"><span id="progressBar"></span></div></div>
+        <div class="card"><div class="head"><span>Budsjett</span><strong id="budgetTxt">120 MNOK</strong></div><div class="meter y"><span id="budgetBar"></span></div></div>
+        <div class="card"><div class="head"><span>Tillit</span><strong id="trustTxt">100</strong></div><div class="meter"><span id="trustBar"></span></div></div>
+        <div class="card"><div class="head"><span>Action Points</span><strong id="apTxt">3/3</strong></div><div class="meter a"><span id="apBar"></span></div></div>
+        <div class="card"><div class="head"><span>Combo</span><strong id="comboTxt">x0</strong></div><div class="meter"><span id="comboBar"></span></div></div>
+      </article>
+    </section>
+
+    <section class="main">
+      <section class="panel view">
+        <h2 style="margin:0 0 8px">Digital Twin View</h2>
+        <div class="stage" id="stage"><div class="building" id="building"></div><div class="drone" id="drone">BOB</div></div>
+        <p class="hint">Klikk blinkende clashes direkte i modellen for a lukke dem (koster 1 AP).</p>
+        <div class="kpi">
+          <div class="k"><small>Clashes</small><strong id="clashVal">0</strong></div>
+          <div class="k"><small>BCF</small><strong id="bcfVal">0</strong></div>
+          <div class="k"><small>Kaos</small><strong id="chaosVal">0</strong></div>
+          <div class="k"><small>BOB kost</small><strong id="aiVal">0</strong></div>
+        </div>
+      </section>
+
+      <section class="panel ctl">
+        <h2 style="margin:0 0 8px">Event-kort</h2>
+        <article class="ev">
+          <div class="meta" id="eventMeta">Fag: ARK / RIB / RIV / RIE / ENT</div>
+          <h3 id="eventTitle">Prosjektet venter...</h3>
+          <p class="txt" id="eventBody">Trykk Start prosjekt.</p>
+          <div class="choices">
+            <button id="opt1" class="choice" disabled>Valg 1</button>
+            <button id="opt2" class="choice alt" disabled>Valg 2</button>
+            <button id="opt3" class="choice ghost" disabled>Valg 3</button>
+          </div>
+        </article>
+        <div class="globals">
+          <button id="startBtn">Start prosjekt</button>
+          <button id="nextDayBtn" class="alt" disabled>Neste dag (reset AP)</button>
+          <button id="clashBtn" class="ghost" disabled>Kjoer clash detection (1 AP)</button>
+          <button id="iceBtn" class="ghost" disabled>Kall inn ICE-mote (2 AP)</button>
+          <button id="aiBtn" class="ghost" disabled>Bruk BOB AI (2 AP)</button>
+        </div>
+        <div class="note" id="roleNote">Hotseat ikke startet.</div>
+        <div class="roster" id="rosterBox"></div>
+      </section>
+    </section>
+
+    <section class="panel logs">
+      <h2 style="margin:0 0 8px">Prosjektlogg</h2>
+      <div class="logbox" id="logBox"></div>
+    </section>
+  </main>
+
+  <section class="ov" id="overlay">
+    <div class="cardov">
+      <h3>BIM Crisis Control</h3>
+      <p>Lever bygget innen dag 60. Hold budsjett og tillit over 0.</p>
+      <button id="overlayStart">Start kaoset</button>
+    </div>
+  </section>
+
+  <script type="module" src="./js/game.js"></script>
+</body>
+</html>
