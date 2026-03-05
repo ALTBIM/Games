@@ -8,6 +8,7 @@ body{margin:0;font-family:"Segoe UI Variable Text","Segoe UI",sans-serif;color:v
 .meter{height:10px;border:1px solid #355275;border-radius:999px;background:#142844;overflow:hidden}.meter>span{display:block;height:100%;width:0;transition:width .35s ease;background:linear-gradient(90deg,#58c8ff,#7891ff)}
 .g>span{background:linear-gradient(90deg,#2ce39a,#5df4bc)} .y>span{background:linear-gradient(90deg,#ffd26e,#ffad4a)} .a>span{background:linear-gradient(90deg,#8af,#58c8ff)}
 .main{display:grid;grid-template-columns:1.25fr 1fr;gap:10px}.view,.ctl,.logs{padding:10px}
+.pixel-scene{width:100%;height:auto;display:block;border:1px solid #355275;border-radius:12px;background:#0b1828;image-rendering:pixelated;image-rendering:crisp-edges}
 .stage{min-height:340px;border:1px solid #355275;border-radius:12px;position:relative;overflow:hidden;background:linear-gradient(transparent 27px,#1a355455 28px),linear-gradient(90deg,transparent 27px,#1a355455 28px),radial-gradient(circle at 30% 20%,#1a3659 0,#0b1625 68%);background-size:28px 28px,28px 28px,auto}
 .stage.alarm{animation:alarmPulse .65s ease}
 .stage.alarm::after{content:"";position:absolute;inset:-20%;border-radius:50%;border:2px solid #ff8ea1;opacity:.0;animation:alarmWave .65s ease}

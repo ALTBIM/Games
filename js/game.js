@@ -10,7 +10,7 @@ import {
   addLog,
   syncClashSpots
 } from "./state.js";
-import { getElements, buildModules, renderLogs, renderClashSpots } from "./ui.js";
+import { getElements, buildModules, renderLogs, renderClashSpots, renderPixelScene } from "./ui.js";
 
 const state = createState();
 const el = getElements();
@@ -137,6 +137,7 @@ function render() {
     : `<div class="prow"><span>Ingen spillere aktive</span><span>-</span></div>`;
 
   renderTwin();
+  renderPixelScene(el, state);
   renderLogs(el, state.logs);
 }
 
